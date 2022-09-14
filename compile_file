@@ -1,0 +1,3 @@
+$cc linoperations.cpp
+$cc linoperations.cpp -o a
+$./a.out
