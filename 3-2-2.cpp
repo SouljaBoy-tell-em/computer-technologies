@@ -53,10 +53,9 @@ int main (int argc, char ** argv) {
     char rootCurrent [LEN];
     delim (current, rootCurrent);
 
-    DIR * dir;
-    dir = opendir (current);
+    DIR * dir = opendir (current);
 
-    if (strcmp (argv[1], "..") == 0)
+    if (argc >= 2 && strcmp (argv[1], "..") == 0)
         dir = opendir (rootCurrent);
 
     struct dirent * getDir;
@@ -96,5 +95,5 @@ void delim (char * current, char * rootCurrent) {
 
     }
 
-
 }
+
