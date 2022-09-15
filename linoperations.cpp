@@ -63,12 +63,10 @@ int main(){
     int i = 1;
     while (pts != NULL){
         
-        if (*(pts->gr_mem) != NULL && strcmp (ptsmain->pw_gecos, *(pts->gr_mem)) == 0) {
-
+        if (*(pts->gr_mem) != NULL && strcmp (ptsmain->pw_gecos, *(pts->gr_mem)) == 0)
             printf ("group %d: %s\n", i, *(pts->gr_mem));
-            i++;
-        }
 
+        i++;
         pts = getgrent ();
         
     }
