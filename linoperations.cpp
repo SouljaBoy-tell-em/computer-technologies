@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
+#include <string.h>
 
 
 
@@ -52,17 +53,24 @@ int main(){
     */
 
     struct group * pts = getgrent ();
+    struct passwd * ptsmain = getpwuid (getuid());
     
     printf ("group name: %s\n", pts->gr_name);
     printf ("group password: %s\n", pts->gr_passwd);
     printf ("group ID: %d\n", pts->gr_gid);
-
-    int i = 1;
-    while (*(pts->gr_mem) != NULL) {
+    printf ("REAL NAME: %s\n\n", ptsmain->pw_gecos);
     
-        printf ("group %d: %s\n", i, *(pts->gr_mem));
-        i++;
-        pts = getgrent();
+    int i = 1;
+    while (pts != NULL){
+        
+        if (*(pts->gr_mem) != NULL && strcmp (ptsmain->pw_gecos, *(pts->gr_mem)) == 0) {
+
+            printf ("group %d: %s\n", i, *(pts->gr_mem));
+            i++;
+        }
+
+        pts = getgrent ();
+        
     }
 
 
