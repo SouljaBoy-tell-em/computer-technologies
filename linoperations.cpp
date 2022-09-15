@@ -34,7 +34,8 @@ int main(){
 
     */
 
-
+    /*
+    
     struct group * pts = getgrgid (getgid ());
 
     printf ("group name: %s\n", pts->gr_name);
@@ -46,9 +47,25 @@ int main(){
 
         printf ("group %s", *(pts->gr_mem));
         (* (pts->gr_mem))++;
-
     }
 
-    return 0;
+    */
+
+    struct group * pts = getgrent ();
     
+    printf ("group name: %s\n", pts->gr_name);
+    printf ("group password: %s\n", pts->gr_passwd);
+    printf ("group ID: %d\n", pts->gr_gid);
+
+    int i = 1;
+    while (*(pts->gr_mem) != NULL) {
+    
+        printf ("group %d: %s\n", i, *(pts->gr_mem));
+        i++;
+        pts = getgrent();
+    }
+
+
+
+    return 0;
 }
