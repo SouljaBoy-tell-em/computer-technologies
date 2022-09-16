@@ -53,10 +53,10 @@ int main (int argc, char ** argv) {
     char rootCurrent [LEN];
     delim (current, rootCurrent);
 
-    DIR * dir = opendir (current);
+    DIR * dir = opendir ("."); // dir = opendir (current);
 
     if (argc >= 2 && strcmp (argv[1], "..") == 0)
-        dir = opendir (rootCurrent);
+        dir = opendir (".."); // dir = opendir (rootCurrent);
 
     struct dirent * getDir;
     while ((getDir = readdir (dir)) != NULL) {
