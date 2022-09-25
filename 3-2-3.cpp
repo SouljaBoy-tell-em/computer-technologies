@@ -38,7 +38,6 @@ size_t copy (char ** argv);
 void info (void);
 void command_block (int argc, char ** argv, const char * short_option, const struct option * long_option);
 void save_specificator (char ** argv);
-char * infoSpecificatorFile (FILE * save);
 
 
 int main (int argc, char ** argv) {
@@ -87,31 +86,11 @@ void command_block (int argc, char ** argv, const char * short_option, const str
 }
 
 
-char * infoSpecificatorFile (FILE * save) {
-    
-    char ch, * save_str = (char * ) malloc (sizeof (char) * LEN);
-
-    while ((ch = getc (save)) != EOF) {
-        
-        * save_str = ch;
-        putchar (* save_str);
-        save_str++;    
-    }
-    * save_str = '\0';
-    
-    //puts (save_str);
-    return save_str;    
-}
-
-
 void save_specificator (char ** argv) {
 
     FILE * save = fopen ("save.txt", "rb+");
     CHECK_ERROR (save == NULL, "Problem with opening file.", FILE_AREN_T_OPENING);
     fprintf (save, "%s %s %s", argv[optind], ">", argv[optind + 1]);
-    char * mem = (char * ) malloc (sizeof (char) * 10);
-    fread (mem, sizeof (char), 100, save);
-    fputs (mem, stdout); 
     fclose (save);
 }
 
@@ -134,7 +113,7 @@ size_t copy (char ** argv) {
 
     FILE * file1 = fopen (rec1, "r");
     CHECK_ERROR (file1 == NULL, "Problem with opening file.", FILE_AREN_T_OPENING);
-    FILE * file2 = fopen (rec2, "a");
+    FILE * file2 = fopen (rec2, "rb+");
     CHECK_ERROR (file2 == NULL, "Problem with opening file.", FILE_AREN_T_OPENING);
     unsigned long size = FileSize (file1, &buf);
     char * mem = (char * ) malloc (size * sizeof (char));
