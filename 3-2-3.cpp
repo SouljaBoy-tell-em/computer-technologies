@@ -106,7 +106,7 @@ char * infoSpecificatorFile (FILE * save) {
 
 void save_specificator (char ** argv) {
 
-    FILE * save = fopen ("save.txt", "a");
+    FILE * save = fopen ("save.txt", "rb+");
     CHECK_ERROR (save == NULL, "Problem with opening file.", FILE_AREN_T_OPENING);
     fprintf (save, "%s %s %s", argv[optind], ">", argv[optind + 1]);
     char * mem = (char * ) malloc (sizeof (char) * 10);
