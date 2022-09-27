@@ -10,6 +10,7 @@
 #include <time.h>
 #include <limits.h>
 #include <string.h>
+#include <errno.h>
 
 
 #define LEN 50
@@ -34,7 +35,8 @@ enum error_code {
 
 
 void command_block (int argc, char ** argv, const char * short_option, const struct option * long_option);
-size_t copy (char ** argv);
+size_t copy (char ** argv, bool statusArgv);
+void destroyAccessFile ();
 unsigned long FileSize (FILE * file);
 void info (void);
 void outputCommand (void);
@@ -44,11 +46,12 @@ void save_specificator (char ** argv);
 
 int main (int argc, char ** argv) {
 
-    const char short_option [] = "hvi";
+    const char short_option [] = "hvif";
     const struct option long_option [] = {
                                            {"help", no_argument, NULL, 'h'},
                                            {"verbose", no_argument, NULL, 'v'},
                                            {"interactive", no_argument, NULL, 'i'},
+                                           {"force", no_argument, NULL, 'f'},
                                            {NULL, no_argument, NULL, 0}
                                          };
     command_block (argc, argv, short_option, long_option);
@@ -59,7 +62,7 @@ int main (int argc, char ** argv) {
 
 void command_block (int argc, char ** argv, const char * short_option, const struct option * long_option) {
     
-    int long_i = 0, opt = 0, flag_h = 0, flag_v = 0, flag_i = 0;
+    int long_i = 0, opt = 0, flag_h = 0, flag_v = 0, flag_i = 0, flag_f = 0;
 
     while ((opt = getopt_long (argc, argv, short_option, long_option, &long_i)) != -1) {
 
@@ -74,6 +77,9 @@ void command_block (int argc, char ** argv, const char * short_option, const str
             case 'i': flag_i = 1;
                       break;
 
+            case 'f': flag_f = 1;
+                      break;
+
             default : break;
         }
     }
@@ -86,9 +92,12 @@ void command_block (int argc, char ** argv, const char * short_option, const str
     
     if (flag_i == 1)
         recordDirectory (argv);
+
+    if (flag_f == 1)
+        destroyAccessFile ();
     
     if (argc >= 3)
-        copy (argv);
+        copy (argv, true);
     
 
 }
@@ -112,12 +121,22 @@ char context_menu (void) {
 }
 
 
-size_t copy (char ** argv) {
-    
+size_t copy (char ** argv, bool statusArgv) {
+  
     struct stat buf = {};
-    char rec1 [LEN], rec2 [LEN];
-    strcpy (rec1, argv [optind]);
-    strcpy (rec2, argv [optind + 1]);
+    char rec1 [LEN], rec2 [LEN]; 
+    
+    if (statusArgv == true) {
+
+        strcpy (rec1, argv [optind]);
+        strcpy (rec2, argv [optind + 1]);
+    }
+
+    else {
+    
+        strcpy (rec1, "file1.txt");
+        strcpy (rec2, "file2.txt");
+    }
 
     FILE * file1 = fopen (rec1, "r");
     CHECK_ERROR (file1 == NULL, "Problem with opening file1.txt", FILE_AREN_T_OPENING);
@@ -138,6 +157,23 @@ size_t copy (char ** argv) {
 
     return NO_ERROR;
 }
+
+
+void destroyAccessFile () {
+
+    extern int errno;
+    char rec1 [LEN] = "file1.txt", rec2 [LEN] = "file2.txt";
+    FILE * file = fopen (rec2, "w");
+    CHECK_ERROR (file == NULL, "Problem with opening file2.txt", FILE_AREN_T_OPENING);
+
+    if (errno == EACCES)
+        remove (rec2);
+    
+    copy (NULL, false);
+    
+    fclose (file);    
+}
+
 
 unsigned long FileSize (FILE * file) {
     
@@ -165,6 +201,7 @@ void outputCommand (void) {
     CHECK_ERROR (save == NULL, "Problem with opening file save.txt", FILE_AREN_T_OPENING);
     unsigned long filesize = FileSize (save);
     char * mem = (char * ) calloc (filesize, sizeof (char));
+    CHECK_ERROR (mem == NULL, "Problem with allocating memory.", NOT_MEMORY);
     fread (mem, sizeof (char), filesize, save);
     puts (mem);
     free (mem);
@@ -173,6 +210,7 @@ void outputCommand (void) {
 
 void recordDirectory (char ** argv) {
 
+    FILE * save = fopen ("save.txt", "a");
     DIR * dir = opendir ("."); // dir = opendir (current);
     struct dirent * getDir;
     int amount_of_files = 0, i = 0;
@@ -203,10 +241,10 @@ void recordDirectory (char ** argv) {
             if (context_menu () == 'n')
                 exit (EXIT_FAILURE);
             
-            copy (argv);
+            copy (argv, true);
             break;        
         }
     }
 
-
+    fclose (save);
 }
