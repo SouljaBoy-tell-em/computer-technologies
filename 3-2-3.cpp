@@ -38,15 +38,17 @@ size_t copy (char ** argv);
 unsigned long FileSize (FILE * file);
 void info (void);
 void outputCommand (void);
+void recordDirectory (char ** argv);
 void save_specificator (char ** argv);
 
 
 int main (int argc, char ** argv) {
 
-    const char short_option [] = "hv";
+    const char short_option [] = "hvi";
     const struct option long_option [] = {
                                            {"help", no_argument, NULL, 'h'},
                                            {"verbose", no_argument, NULL, 'v'},
+                                           {"interactive", no_argument, NULL, 'i'},
                                            {NULL, no_argument, NULL, 0}
                                          };
     command_block (argc, argv, short_option, long_option);
@@ -68,6 +70,9 @@ void command_block (int argc, char ** argv, const char * short_option, const str
 
             case 'v': flag_v = 1;
                       break;
+            
+            case 'i': flag_i = 1;
+                      break;
 
             default : break;
         }
@@ -76,13 +81,34 @@ void command_block (int argc, char ** argv, const char * short_option, const str
     if (flag_h == 1)
         info ();
     
-    if (flag_v == 1) {
-
+    if (flag_v == 1)
         outputCommand ();
-    }
+    
+    if (flag_i == 1)
+        recordDirectory (argv);
     
     if (argc >= 3)
         copy (argv);
+    
+
+}
+
+
+char context_menu (void) {
+
+    char ch;
+    puts ("Do you want record in file ? - y/n");
+    ch = getchar ();
+    while (getchar () != '\n')
+        continue;
+
+    if (strchr ("yn", ch) == 0) {
+
+        puts ("You should take true variant.");
+        context_menu ();
+    }
+
+    return ch;
 }
 
 
@@ -96,12 +122,12 @@ size_t copy (char ** argv) {
     FILE * file1 = fopen (rec1, "r");
     CHECK_ERROR (file1 == NULL, "Problem with opening file1.txt", FILE_AREN_T_OPENING);
     FILE * file2 = fopen (rec2, "rb+");
-    CHECK_ERROR (file2 == NULL, "Problem with opening file file2.txt", FILE_AREN_T_OPENING);
+    CHECK_ERROR (file2 == NULL, "Problem with opening file.", FILE_AREN_T_OPENING);
     FILE * save = fopen ("save.txt", "w");
     CHECK_ERROR (save == NULL, "Problem with opening file save.txt", FILE_AREN_T_OPENING);
     unsigned long size = FileSize (file1);
     char * mem = (char * ) malloc (size * sizeof (char));
-    CHECK_ERROR (mem == NULL, "Problem with opening file.", NOT_MEMORY); 
+    CHECK_ERROR (mem == NULL, "Problem with allocating memory.", NOT_MEMORY); 
     fread (mem, sizeof (char), size, file1);
     fwrite (mem, sizeof (char), size, file2);
     fprintf (save, "%s > %s", rec1, rec2);
@@ -142,4 +168,45 @@ void outputCommand (void) {
     fread (mem, sizeof (char), filesize, save);
     puts (mem);
     free (mem);
+}
+
+
+void recordDirectory (char ** argv) {
+
+    DIR * dir = opendir ("."); // dir = opendir (current);
+    struct dirent * getDir;
+    int amount_of_files = 0, i = 0;
+
+    while ((getDir = readdir (dir)) != NULL) {
+
+        if (strcmp (getDir->d_name, ".") == 0)
+            continue;
+        amount_of_files++;
+    }
+
+    char fileBuffer [amount_of_files][LEN];
+    dir = opendir (".");
+
+    while ((getDir = readdir (dir)) != NULL) {
+
+        if (strcmp (getDir->d_name, ".") == 0 || strcmp (getDir->d_name, "..") == 0)
+            continue;
+        
+        strcpy (fileBuffer [i], getDir->d_name);
+        i++;
+    }
+
+    for (i = 0; i < amount_of_files; i++) {
+
+        if (strcmp (argv [optind + 1], fileBuffer [i]) == 0) {
+            
+            if (context_menu () == 'n')
+                exit (EXIT_FAILURE);
+            
+            copy (argv);
+            break;        
+        }
+    }
+
+
 }
