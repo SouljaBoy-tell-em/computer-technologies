@@ -15,6 +15,9 @@
 
 #define LEN 50
 #define CP "cp"
+#define FILE1 "file1.txt"
+#define FILE2 "file2.txt"
+#define SAVE "save.txt"
 
 
 #define CHECK_ERROR(condition, message_error, error_code) \
@@ -35,13 +38,14 @@ enum error_code {
 
 
 void command_block (int argc, char ** argv, const char * short_option, const struct option * long_option);
-size_t copy (char ** argv, bool statusArgv);
+size_t copy ();
 void destroyAccessFile ();
 unsigned long FileSize (FILE * file);
 void info (void);
 void outputCommand (void);
 void recordDirectory (char ** argv);
 void save_specificator (char ** argv);
+void clearSave (void);
 
 
 int main (int argc, char ** argv) {
@@ -62,8 +66,8 @@ int main (int argc, char ** argv) {
 
 void command_block (int argc, char ** argv, const char * short_option, const struct option * long_option) {
     
+    fopen (SAVE, "w");
     int long_i = 0, opt = 0, flag_h = 0, flag_v = 0, flag_i = 0, flag_f = 0;
-
     while ((opt = getopt_long (argc, argv, short_option, long_option, &long_i)) != -1) {
 
         switch (opt) {
@@ -84,22 +88,28 @@ void command_block (int argc, char ** argv, const char * short_option, const str
         }
     }
 
+    if (argv [optind] != NULL && argv [optind + 1] != NULL)
+        copy ();
+
     if (flag_h == 1)
         info ();
+
+    if (flag_i == 1)
+        recordDirectory (argv);
     
     if (flag_v == 1)
         outputCommand ();
-    
-    if (flag_i == 1)
-        recordDirectory (argv);
 
-    if (flag_f == 1)
-        destroyAccessFile ();
-    
-    if (argc >= 3)
-        copy (argv, true);
+    //if (flag_f == 1)
+      //  destroyAccessFile ();
     
 
+}
+
+
+void clearSave (void) {
+
+    fopen (SAVE, "w");
 }
 
 
@@ -121,35 +131,20 @@ char context_menu (void) {
 }
 
 
-size_t copy (char ** argv, bool statusArgv) {
-  
-    struct stat buf = {};
-    char rec1 [LEN], rec2 [LEN]; 
-    
-    if (statusArgv == true) {
+size_t copy () {
 
-        strcpy (rec1, argv [optind]);
-        strcpy (rec2, argv [optind + 1]);
-    }
-
-    else {
-    
-        strcpy (rec1, "file1.txt");
-        strcpy (rec2, "file2.txt");
-    }
-
-    FILE * file1 = fopen (rec1, "r");
+    FILE * file1 = fopen (FILE1, "r");
     CHECK_ERROR (file1 == NULL, "Problem with opening file1.txt", FILE_AREN_T_OPENING);
-    FILE * file2 = fopen (rec2, "rb+");
+    FILE * file2 = fopen (FILE2, "rb+");
     CHECK_ERROR (file2 == NULL, "Problem with opening file.", FILE_AREN_T_OPENING);
-    FILE * save = fopen ("save.txt", "w");
+    FILE * save = fopen (SAVE, "w");
     CHECK_ERROR (save == NULL, "Problem with opening file save.txt", FILE_AREN_T_OPENING);
     unsigned long size = FileSize (file1);
     char * mem = (char * ) malloc (size * sizeof (char));
     CHECK_ERROR (mem == NULL, "Problem with allocating memory.", NOT_MEMORY); 
     fread (mem, sizeof (char), size, file1);
     fwrite (mem, sizeof (char), size, file2);
-    fprintf (save, "%s > %s", rec1, rec2);
+    fprintf (save, "%s > %s", FILE1, FILE2);
 
     fclose (file1);
     fclose (file2);
@@ -161,16 +156,12 @@ size_t copy (char ** argv, bool statusArgv) {
 
 void destroyAccessFile () {
 
-    extern int errno;
-    char rec1 [LEN] = "file1.txt", rec2 [LEN] = "file2.txt";
-    FILE * file = fopen (rec2, "w");
+    clearSave ();
+    FILE * file = fopen (FILE2, "w");
     CHECK_ERROR (file == NULL, "Problem with opening file2.txt", FILE_AREN_T_OPENING);
-
-    if (errno == EACCES)
-        remove (rec2);
-    
-    copy (NULL, false);
-    
+    remove (FILE2);
+    fopen (FILE2, "w");   
+    copy ();
     fclose (file);    
 }
 
@@ -192,25 +183,27 @@ void info (void) {
     puts ("If you want copy information between something    ");
     puts ("files, you should point specificator CP in small  ");
     puts ("letters. Struct description: file1 cp file2       ");
+    exit (EXIT_SUCCESS);
 }
 
 
 void outputCommand (void) {
 
-    FILE * save = fopen ("save.txt", "r");
+    FILE * save = fopen (SAVE, "r");
     CHECK_ERROR (save == NULL, "Problem with opening file save.txt", FILE_AREN_T_OPENING);
     unsigned long filesize = FileSize (save);
     char * mem = (char * ) calloc (filesize, sizeof (char));
-    CHECK_ERROR (mem == NULL, "Problem with allocating memory.", NOT_MEMORY);
+    CHECK_ERROR (mem == NULL, "Problem with allocating memory for MEM.", NOT_MEMORY);
     fread (mem, sizeof (char), filesize, save);
     puts (mem);
     free (mem);
+    fclose (save);
 }
 
 
 void recordDirectory (char ** argv) {
 
-    FILE * save = fopen ("save.txt", "a");
+    FILE * save = fopen (SAVE, "w");
     DIR * dir = opendir ("."); // dir = opendir (current);
     struct dirent * getDir;
     int amount_of_files = 0, i = 0;
@@ -238,10 +231,13 @@ void recordDirectory (char ** argv) {
 
         if (strcmp (argv [optind + 1], fileBuffer [i]) == 0) {
             
-            if (context_menu () == 'n')
+            if (context_menu () == 'n') {
+
+                puts ("File didn't record.");
                 exit (EXIT_FAILURE);
+            }
             
-            copy (argv, true);
+            copy ();
             break;        
         }
     }
