@@ -41,6 +41,7 @@ void command_block (int argc, char ** argv, const char * short_option, const str
 size_t copy ();
 void destroyAccessFile ();
 unsigned long FileSize (FILE * file);
+bool FileStatus (char ** argv);
 void info (void);
 void outputCommand (void);
 void recordDirectory (char ** argv);
@@ -65,7 +66,7 @@ int main (int argc, char ** argv) {
 
 
 void command_block (int argc, char ** argv, const char * short_option, const struct option * long_option) {
-    
+
     fopen (SAVE, "w");
     int long_i = 0, opt = 0, flag_h = 0, flag_v = 0, flag_i = 0, flag_f = 0;
     while ((opt = getopt_long (argc, argv, short_option, long_option, &long_i)) != -1) {
@@ -88,21 +89,23 @@ void command_block (int argc, char ** argv, const char * short_option, const str
         }
     }
 
-    if (argv [optind] != NULL && argv [optind + 1] != NULL)
-        copy ();
-
     if (flag_h == 1)
         info ();
 
-    if (flag_i == 1)
-        recordDirectory (argv);
+    if (FileStatus (argv) == true) {
+
+
+        if (flag_i == 1)
+            recordDirectory (argv);
+
+        if (flag_v == 1)
+            outputCommand ();
     
-    if (flag_v == 1)
-        outputCommand ();
 
     //if (flag_f == 1)
       //  destroyAccessFile ();
     
+    }
 
 }
 
@@ -135,8 +138,8 @@ size_t copy () {
 
     FILE * file1 = fopen (FILE1, "r");
     CHECK_ERROR (file1 == NULL, "Problem with opening file1.txt", FILE_AREN_T_OPENING);
-    FILE * file2 = fopen (FILE2, "rb+");
-    CHECK_ERROR (file2 == NULL, "Problem with opening file.", FILE_AREN_T_OPENING);
+    FILE * file2 = fopen (FILE2, "w");
+    CHECK_ERROR (file2 == NULL, "Problem with opening file2.txt", FILE_AREN_T_OPENING);
     FILE * save = fopen (SAVE, "w");
     CHECK_ERROR (save == NULL, "Problem with opening file save.txt", FILE_AREN_T_OPENING);
     unsigned long size = FileSize (file1);
@@ -177,6 +180,15 @@ unsigned long FileSize (FILE * file) {
 }
 
 
+bool FileStatus (char ** argv) {
+
+    if (argv [optind] != NULL && argv [optind + 1] != NULL)
+        return true;
+
+    return false;
+}
+
+
 void info (void) {
     
     puts ("This program can copy information between 2 files.");
@@ -187,7 +199,7 @@ void info (void) {
 }
 
 
-void outputCommand (void) {
+void outputCommand () {
 
     FILE * save = fopen (SAVE, "r");
     CHECK_ERROR (save == NULL, "Problem with opening file save.txt", FILE_AREN_T_OPENING);
@@ -233,14 +245,15 @@ void recordDirectory (char ** argv) {
             
             if (context_menu () == 'n') {
 
-                puts ("File didn't record.");
+                puts ("NO RECORD FILE1 -> FILE2");
                 exit (EXIT_FAILURE);
             }
             
             copy ();
-            break;        
+            puts ("file1.txt ->file2.txt");
+            exit (EXIT_SUCCESS);      
         }
     }
-
+  
     fclose (save);
 }
