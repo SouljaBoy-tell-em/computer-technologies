@@ -92,22 +92,25 @@ void command_block (int argc, char ** argv, const char * short_option, const str
     if (flag_h == 1)
         info ();
 
+
     if (FileStatus (argv) == true) {
 
+        if (flag_f == 1)
+            destroyAccessFile ();
 
         if (flag_i == 1)
             recordDirectory (argv);
 
         if (flag_v == 1)
             outputCommand ();
-    
 
-    //if (flag_f == 1)
-      //  destroyAccessFile ();
+        else 
+            copy ();
     
     }
 
 }
+
 
 
 void clearSave (void) {
@@ -160,11 +163,8 @@ size_t copy () {
 void destroyAccessFile () {
 
     clearSave ();
-    FILE * file = fopen (FILE2, "w");
-    CHECK_ERROR (file == NULL, "Problem with opening file2.txt", FILE_AREN_T_OPENING);
     remove (FILE2);
-    fopen (FILE2, "w");   
-    copy ();
+    FILE * file = fopen (FILE2, "w");   
     fclose (file);    
 }
 
@@ -201,6 +201,7 @@ void info (void) {
 
 void outputCommand () {
 
+    copy ();
     FILE * save = fopen (SAVE, "r");
     CHECK_ERROR (save == NULL, "Problem with opening file save.txt", FILE_AREN_T_OPENING);
     unsigned long filesize = FileSize (save);
