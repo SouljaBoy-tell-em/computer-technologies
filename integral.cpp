@@ -4,9 +4,10 @@
 #include <ctime>
 
 
+#define AMOUNTPARTSUMS 4
 #define LIMIT1 0.0
 #define LIMIT2 2.0
-#define AMOUNTPARTSUMS 4
+#define AMOUNTTESTS 10
 
 
 typedef struct {
@@ -19,15 +20,21 @@ typedef struct {
 
 
 double askEquation (double x);
-void driver (void);
+void driver (int N, int AMOUNTTHREADS);
 void * flow (void * partSum);
 
 
 int main (void) {
 
-	driver ();
+	int i = 0, N = 0, AMOUNTTHREADS = 0;
+	scanf ("%d %d", &N, &AMOUNTTHREADS);
 
-	//printf ("TIME: %lf\n", (end - start) / (CLOCKS_PER_SEC));
+	double start = clock ();
+	for (i = 0; i < AMOUNTTESTS; i++)
+		driver (N, AMOUNTTHREADS);
+	double end = clock ();
+
+	printf ("AVG TIME: %lf\n", (end - start) / (CLOCKS_PER_SEC * AMOUNTTHREADS));
 	return 0;
 }
 
@@ -38,10 +45,7 @@ double askEquation (double x) {
 }
 
 
-void driver (void) {
-
-	int N = 0, AMOUNTTHREADS = 0;
-	scanf ("%d %d", &N, &AMOUNTTHREADS);
+void driver (int N, int AMOUNTTHREADS) {
 
 	const int increase = N / AMOUNTTHREADS;
 	pthread_t threads [AMOUNTTHREADS];
@@ -57,10 +61,8 @@ void driver (void) {
 		partsum[i].uplim = (partsum[i].downlim + increase);
 	}
 
-	double start = clock ();
 	for (i = 0; i < AMOUNTTHREADS; i++)
 		pthread_create (&threads[i], NULL, flow, &partsum[i]);
-	double end = clock ();
 
 	for (i = 0; i < AMOUNTTHREADS; i++)
 		pthread_join (threads[i], NULL);
