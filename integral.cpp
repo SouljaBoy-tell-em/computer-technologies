@@ -78,8 +78,6 @@ void driver (int N, int AMOUNTTHREADS) {
 
 void * flow (void * partSum) {
 
-	PartSum * partsum = (PartSum * )partSum;
-
 	double part = (LIMIT2 - LIMIT1) / ((PartSum * )partSum)->N, mainFullPart = 0;
 
 	int i = 0;
