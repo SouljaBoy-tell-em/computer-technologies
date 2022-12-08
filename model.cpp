@@ -1,20 +1,21 @@
-#include <iostream>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
-
+#include <string.h>
 
 
 #define CHECK_ERROR(condition, message_error, error_code) \
             do {                                          \
                if (condition) {                           \
-                   cout << message_error;   	          \
+                   cout << message_error;   	          	 \
                    return error_code;                     \
                }                                          \
             } while(false)
 
 #define MSGSZ 128
-#define MAXSTRINGINT 10
+#define LEN   100
+#define DATABASE "dataBase.txt"
 
 
 using namespace std;
@@ -23,31 +24,31 @@ using namespace std;
 typedef struct msgbuf {
 
 	long mtype;
-	char * mtext;
+	char mtext[MSGSZ];
 } message_buf;
 
 
 int main (void) {
 
-	int msqid = 0;
-	key_t key = 0;
+	int msqid;
+	key_t key  = 0;
+	size_t len = 0;
+	message_buf send = {};
+	char message[LEN];
 
-	message_buf send;
-	send.mtext = (char * ) malloc (sizeof (char) * MSGSZ);
-	char N[MAXSTRINGINT];
+	printf ("Input key:\n");
+	scanf ("%d", &key);
 
-	cout << "Input key for msg queue: ";
-	cin >> key;
-	cout << endl << "Input N and amount of Birds through space: ";
-	scanf ("%s", N);
-
-
-	msqid = msgget (key, IPC_CREAT);
-	CHECK_ERROR(key < 0 || msqid == -1, "\nProblem with create queue.", EXIT_FAILURE);
-
-	strcpy (send.mtext, N);
+	msqid = msgget (key, IPC_CREAT | 0666);
 	send.mtype = 1;
+
+	printf ("\nInput message: ");
+	scanf ("%s", message);
+
+	(void) strcpy (send.mtext, message);
 	msgsnd (msqid, &send, strlen (send.mtext) + 1, IPC_NOWAIT);
+
+	printf("Message: \"%s\" Sent\n", send.mtext);
 
 	return 0;
 }	
