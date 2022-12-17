@@ -1,0 +1,12 @@
+digraph G {
+ rankdir=L
+block3 [shape=record, color="orange", label="3"];
+block2 [shape=record, color="green", label="2"];
+block3 -> block2
+block1 [shape=record, color="green", label="1"];
+block2 -> block1
+block5 [shape=record, color="red", label="5"];
+block3 -> block5
+block4 [shape=record, color="green", label="4"];
+block5 -> block4
+}
